@@ -1,0 +1,106 @@
+{
+  "project_info": {
+    "project_number": "588984706407",
+    "firebase_url": "https://shasha-a3cab-default-rtdb.firebaseio.com",
+    "project_id": "shasha-a3cab",
+    "storage_bucket": "shasha-a3cab.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:588984706407:android:839f82c0b31ccc40db3bc2",
+        "android_client_info": {
+          "package_name": "org.techtown.locationgps"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "588984706407-od1u1ep8a9ppgp2k5gp7c1ffuv5oj5um.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBjB-INh4e_zpX2wkVOnDwo3ZxsW3DhByM"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "588984706407-od1u1ep8a9ppgp2k5gp7c1ffuv5oj5um.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:588984706407:android:3aa976e75fe1f9c7db3bc2",
+        "android_client_info": {
+          "package_name": "org.techtown.locationgps"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "588984706407-od1u1ep8a9ppgp2k5gp7c1ffuv5oj5um.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBjB-INh4e_zpX2wkVOnDwo3ZxsW3DhByM"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "588984706407-od1u1ep8a9ppgp2k5gp7c1ffuv5oj5um.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:588984706407:android:279102dc115a5a05db3bc2",
+        "android_client_info": {
+          "package_name": "org.techtown.locationgps"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "588984706407-g4u46tcei945j6l0t7gq7087713ff0tt.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "org.techtown.locationgps",
+            "certificate_hash": "cb711f50a140d212b8749504cb4defbee594cc3f"
+          }
+        },
+        {
+          "client_id": "588984706407-od1u1ep8a9ppgp2k5gp7c1ffuv5oj5um.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBjB-INh4e_zpX2wkVOnDwo3ZxsW3DhByM"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "588984706407-od1u1ep8a9ppgp2k5gp7c1ffuv5oj5um.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
