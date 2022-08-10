@@ -13,9 +13,17 @@ import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.graphics.BitmapFactory;
+import android.graphics.Color;
+import android.location.Address;
+import android.location.Geocoder;
+import android.location.Location;
+import android.location.LocationListener;
+import android.location.LocationManager;
 import android.media.RingtoneManager;
 import android.net.Uri;
 import android.os.Build;
+import android.os.Bundle;
 import android.os.Handler;
 import android.os.IBinder;
 import android.os.Looper;
@@ -42,6 +50,8 @@ import com.google.android.gms.location.LocationCallback;
 import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationResult;
 import com.google.android.gms.location.LocationServices;
+import com.google.android.gms.location.LocationSettingsRequest;
+import com.google.android.gms.location.SettingsClient;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.Task;
@@ -50,11 +60,14 @@ import com.google.android.material.snackbar.Snackbar;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.UUID;
 
@@ -72,11 +85,12 @@ public class RealService extends Service  {
     private static final String TAG = "RealtimeActivity";
     //private Intent serviceIntent;
 
+    ServiceThread serviceThread = null;
+
 
     @Override
     public void onStart(Intent intent, int startId) {
         Log.i(TAG, "startRealService");
-        startLocationService();
 
 
 
@@ -85,10 +99,6 @@ public class RealService extends Service  {
         super.onStart(intent, startId);
     }
 
-    /*public RealService() {
-        startLocationService();
-
-    }*/
 
 
 //    providerClient = LocationServices.getFusedLocationProviderClient(this);
@@ -103,13 +113,12 @@ public class RealService extends Service  {
         @Override
         public void onLocationResult(LocationResult locationResult) {
             uniqueId = UUID.randomUUID().toString();
-            Log.v(TAG, "uniqueId:" + locationResult.toString() + ":"+locationResult.getLastLocation());
             super.onLocationResult(locationResult);
             if (locationResult != null && locationResult.getLastLocation() != null) {
                 double Latitude = locationResult.getLastLocation().getLatitude();
                 double Longitude = locationResult.getLastLocation().getLongitude();
 
-                Log.v("LOCATION_UPDATE", Latitude + ", " + Longitude + "," + "test");
+                Log.v(TAG,"LOCATION_UPDATE:"+ Latitude + ", " + Longitude + "," + "test");
                 // Check internet permission and
                 // Send Location to Database
                 if (ContextCompat.checkSelfPermission(getApplicationContext(), android.Manifest.permission.INTERNET) == PackageManager.PERMISSION_GRANTED) {
@@ -119,28 +128,48 @@ public class RealService extends Service  {
         }
     };
 
+
     @SuppressLint("MissingPermission")
     private void startLocationService() {
 
-        LocationRequest locationRequest = LocationRequest.create();
-        locationRequest.setInterval(80000);
-        locationRequest.setFastestInterval(50000);
-        locationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
+        LocationManager locationManager = (LocationManager)
+                getSystemService(Context.LOCATION_SERVICE);
+        Location locationGPS = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
+        Location locationNet = locationManager.getLastKnownLocation(LocationManager.NETWORK_PROVIDER);
+        if( locationGPS != null ){
+            double Latitude = locationGPS.getLatitude();
+            double Longitude = locationGPS.getLongitude();
+            uniqueId = UUID.randomUUID().toString();
+            saveLocation(uniqueId, Double.toString(Latitude), Double.toString(Longitude));
+            Log.i(TAG, "Service Runninng------------>"+Latitude);
 
-        LocationServices.getFusedLocationProviderClient(RealService.this).requestLocationUpdates(locationRequest, mLocationCallback, Looper.getMainLooper()).addOnCompleteListener(new OnCompleteListener<Void>() {
-            @Override
-            public void onComplete(@NonNull Task<Void> task) {
-                System.out.println("Complete");
-                Log.i(TAG, "Complete");
-            }
-        }).addOnFailureListener(new OnFailureListener() {
-            @Override
-            public void onFailure(@NonNull Exception e) {
-                e.printStackTrace();
-                Log.i(TAG, e.toString());
-            }
-        });
-        //startForeground(Constants.LOCATION_SERVICE_ID, builder.build());
+        }
+        else if( locationNet != null ){
+            double Latitude = locationNet.getLatitude();
+            double Longitude = locationNet.getLongitude();
+            uniqueId = UUID.randomUUID().toString();
+            saveLocation(uniqueId, Double.toString(Latitude), Double.toString(Longitude));
+        }
+      /*  LocationRequest locationRequest = LocationRequest.create();
+        locationRequest.setInterval(3 * 1000);//80000
+        locationRequest.setFastestInterval(500);//50000
+        locationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
+        LocationServices.getFusedLocationProviderClient(RealService.this)
+                .requestLocationUpdates(locationRequest, mLocationCallback, Looper.myLooper())
+                .addOnCompleteListener(new OnCompleteListener<Void>() {
+                    @Override
+                    public void onComplete(@NonNull Task<Void> task) {
+                        System.out.println("Complete");
+                        Log.i(TAG, "Complete");
+                    }
+                }).addOnFailureListener(new OnFailureListener() {
+                    @Override
+                    public void onFailure(@NonNull Exception e) {
+                        e.printStackTrace();
+                        Log.i(TAG, "onFailure:"+e.toString());
+                    }
+        });*/
+        //startForeground(Constants.LOCATION_SERVICE_ID, locationRequest.build());
     }
 
     public void saveLocation(String uniqueId, String latitude, String longitude){
@@ -187,9 +216,27 @@ public class RealService extends Service  {
                 return params;
             }
         };
-
         // Adding request to request queue
         requestQueue.add(stringRequest);
+    }
+    public class ServiceThread extends Thread {
+        Handler handler;
+        boolean isRun = true;
+
+        public ServiceThread(Handler handler) {
+            this.handler = handler;
+        }
+
+        public void run() {
+            //반복적으로 수행할 작업을 한다.
+            while (isRun) {
+                handler.sendEmptyMessage( 0 );//쓰레드에 있는 핸들러에게 메세지를 보냄
+                try {
+                    Thread.sleep( 1000 * 80 ); //80초씩 쉰다.
+                } catch (Exception e) {
+                }
+            }
+        }
     }
 
     @Override
@@ -197,10 +244,21 @@ public class RealService extends Service  {
         serviceIntent = intent;
         showToast(getApplication(), "Start Service");
         //new RealService();
-        //Log.v("LOCATION_UPDATE",  "test");
+        Log.v("LOCATION_UPDATE",  "test");
 
-        startLocationService();//----------새로 추가했습니다.--------------
 
+
+
+        if( serviceThread == null )
+        {
+
+            Log.v(TAG+"1","serviceThread created" );
+
+            myServiceHandler handler = new myServiceHandler();
+            serviceThread = new ServiceThread( handler );
+            serviceThread.start();
+
+        }
 
 
         mainThread = new Thread(new Runnable() {
@@ -214,7 +272,7 @@ public class RealService extends Service  {
                         Date date = new Date();
                         //showToast(getApplication(), sdf.format(date));
                         sendNotification(sdf.format(date));
-
+                        Log.v("LOCATION_UPDATE",  "test1");
                     } catch (InterruptedException e) {
                         run = false;
                         e.printStackTrace();
@@ -224,15 +282,13 @@ public class RealService extends Service  {
         });
         mainThread.start();
 
-        return START_NOT_STICKY;
+        return START_STICKY;
     }
 
 
 
     @Override
     public void onDestroy() {
-        super.onDestroy();
-
         serviceIntent = null;
         setAlarmTimer();
         Thread.currentThread().interrupt();
@@ -241,6 +297,10 @@ public class RealService extends Service  {
             mainThread.interrupt();
             mainThread = null;
         }
+
+        myServiceHandler handler = new myServiceHandler();
+        serviceThread = new ServiceThread( handler );
+        serviceThread.start();
     }
 
     @Override
@@ -310,6 +370,13 @@ public class RealService extends Service  {
     }
 
 
+    public class myServiceHandler extends Handler {
+        @Override
+        public void handleMessage(android.os.Message msg) {
+
+            startLocationService();
+        }
+    }
 
 
 }

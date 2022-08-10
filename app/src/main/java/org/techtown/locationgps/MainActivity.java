@@ -33,7 +33,11 @@ public class MainActivity extends AppCompatActivity implements PermissionLaunche
     private GoogleApiClient googleApiClient;
     private GoogleSignInOptions gso;
 
-
+    @Override
+    protected void onResume() {
+        super.onResume();
+        setLaunchPermission();
+    }
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -53,6 +57,7 @@ public class MainActivity extends AppCompatActivity implements PermissionLaunche
             intent.setData(Uri.parse("package:" + getApplicationContext().getPackageName()));
             startActivity(intent);
         }
+        setLaunchPermission();
         if (ActivityCompat.checkSelfPermission(this.getApplication().getApplicationContext(), Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED
                 && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED
                 && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_BACKGROUND_LOCATION) != PackageManager.PERMISSION_GRANTED
@@ -76,7 +81,8 @@ public class MainActivity extends AppCompatActivity implements PermissionLaunche
         else {
             if (RealService.serviceIntent==null) {
                 serviceIntent = new Intent(this, RealService.class);
-                startService(serviceIntent);
+                ContextCompat.startForegroundService(this, serviceIntent);
+               // startService(serviceIntent);
             } else {
                 serviceIntent = RealService.serviceIntent;//getInstance().getApplication();
                 Toast.makeText(getApplicationContext(), "Already", Toast.LENGTH_LONG).show();
@@ -126,9 +132,6 @@ public class MainActivity extends AppCompatActivity implements PermissionLaunche
         this.permissionLauncher.launch(Manifest.permission.ACCESS_BACKGROUND_LOCATION);
         this.permissionLauncher.launch(Manifest.permission.INTERNET);
        // this.permissionLauncher.launch(Manifest.permission.MO);
-
-
-
 
     }
 }
