@@ -214,11 +214,9 @@ public class RealService extends Service implements GoogleApiClient.ConnectionCa
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
         serviceIntent = intent;
-        showToast(getApplication(), "Start Service");
+       // showToast(getApplication(), "Start Service");
         //new RealService();
         //Log.v("LOCATION_UPDATE",  "test");
-
-
 
         mainThread = new Thread(new Runnable() {
             @Override
@@ -240,7 +238,6 @@ public class RealService extends Service implements GoogleApiClient.ConnectionCa
             }
         });
         mainThread.start();
-
         return START_NOT_STICKY;
     }
 

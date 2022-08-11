@@ -37,7 +37,6 @@ public class MainActivity extends AppCompatActivity implements PermissionLaunche
     @Override
     protected void onResume() {
         super.onResume();
-        setLaunchPermission();
     }
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -45,7 +44,6 @@ public class MainActivity extends AppCompatActivity implements PermissionLaunche
         setContentView(R.layout.activity_main);
 
         userEmail=(TextView)findViewById(R.id.email);
-        permissionRegisterLauncher();
 
         PowerManager pm = (PowerManager) getApplicationContext().getSystemService(POWER_SERVICE);
         boolean isWhiteListing = false;
@@ -58,13 +56,14 @@ public class MainActivity extends AppCompatActivity implements PermissionLaunche
             intent.setData(Uri.parse("package:" + getApplicationContext().getPackageName()));
             startActivity(intent);
         }
-        setLaunchPermission();
+        permissionRegisterLauncher();
+
         if (ActivityCompat.checkSelfPermission(this.getApplication().getApplicationContext(), Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED
-                && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED
-                && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_BACKGROUND_LOCATION) != PackageManager.PERMISSION_GRANTED
-                && ActivityCompat.checkSelfPermission(this, Manifest.permission.INTERNET) != PackageManager.PERMISSION_GRANTED
+                || ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED
+                || ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_BACKGROUND_LOCATION) != PackageManager.PERMISSION_GRANTED
+                || ActivityCompat.checkSelfPermission(this, Manifest.permission.INTERNET) != PackageManager.PERMISSION_GRANTED
         ) {
-            if (ActivityCompat.shouldShowRequestPermissionRationale(this, Manifest.permission.ACCESS_FINE_LOCATION)) {
+          /*  if (ActivityCompat.shouldShowRequestPermissionRationale(this, Manifest.permission.ACCESS_FINE_LOCATION)) {
                 Snackbar.make(this.findViewById(R.id.layout), "Permission needed for progress!", Snackbar.LENGTH_INDEFINITE).setAction("ALLOW", new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {
@@ -73,7 +72,8 @@ public class MainActivity extends AppCompatActivity implements PermissionLaunche
 
                     }
                 }).show();
-            } else {
+            } else*/
+            {
                 // Request permission
                 setLaunchPermission();
                 //PermissionLauncher.launchPermission.launch(Manifest.permission.ACCESS_FINE_LOCATION);
@@ -83,7 +83,7 @@ public class MainActivity extends AppCompatActivity implements PermissionLaunche
            // startService(new Intent(this, LocationService.class));
             if (RealService.serviceIntent==null) {
                 serviceIntent = new Intent(this, RealService.class);
-                ContextCompat.startForegroundService(this, serviceIntent);
+                startService( serviceIntent);
                // startService(serviceIntent);
             } else {
                 serviceIntent = RealService.serviceIntent;//getInstance().getApplication();
@@ -107,7 +107,10 @@ public class MainActivity extends AppCompatActivity implements PermissionLaunche
             @Override
             public void onActivityResult(Boolean result) {
                 if(result) {
-                    if  (ContextCompat.checkSelfPermission(MainActivity.this, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
+                    if  (ContextCompat.checkSelfPermission(MainActivity.this, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED
+                            && ContextCompat.checkSelfPermission(MainActivity.this, Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED
+                    &&  ContextCompat.checkSelfPermission(MainActivity.this, Manifest.permission.ACCESS_BACKGROUND_LOCATION) == PackageManager.PERMISSION_GRANTED
+                    && ContextCompat.checkSelfPermission(MainActivity.this, Manifest.permission.INTERNET) == PackageManager.PERMISSION_GRANTED) {
                         //Permission granted
                         if (RealService.serviceIntent==null) {
                             serviceIntent = new Intent(MainActivity.this, RealService.class);
@@ -121,7 +124,8 @@ public class MainActivity extends AppCompatActivity implements PermissionLaunche
                 }
                 else {
                     //Permission denied
-                    Toast.makeText(MainActivity.this, "PLEASE GIVE PERMISSION ON SETTINGS", Toast.LENGTH_SHORT).show();
+                    setLaunchPermission();
+                    //Toast.makeText(MainActivity.this, "PLEASE GIVE PERMISSION ON SETTINGS", Toast.LENGTH_SHORT).show();
                 }
             }
         });
@@ -134,7 +138,11 @@ public class MainActivity extends AppCompatActivity implements PermissionLaunche
         this.permissionLauncher.launch(Manifest.permission.ACCESS_COARSE_LOCATION);
         this.permissionLauncher.launch(Manifest.permission.ACCESS_BACKGROUND_LOCATION);
         this.permissionLauncher.launch(Manifest.permission.INTERNET);
-       // this.permissionLauncher.launch(Manifest.permission.MO);
-
+        permissionRegisterLauncher();
+        /*ActivityCompat.requestPermissions(this,
+                new String[]{Manifest.permission.ACCESS_FINE_LOCATION,
+                        Manifest.permission.ACCESS_COARSE_LOCATION,
+                        Manifest.permission.ACCESS_BACKGROUND_LOCATION,
+                        Manifest.permission.INTERNET}, 0);*/
     }
 }
