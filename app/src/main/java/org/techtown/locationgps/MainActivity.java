@@ -33,6 +33,7 @@ public class MainActivity extends AppCompatActivity implements PermissionLaunche
     private GoogleApiClient googleApiClient;
     private GoogleSignInOptions gso;
 
+
     @Override
     protected void onResume() {
         super.onResume();
@@ -79,6 +80,7 @@ public class MainActivity extends AppCompatActivity implements PermissionLaunche
             }
         }
         else {
+           // startService(new Intent(this, LocationService.class));
             if (RealService.serviceIntent==null) {
                 serviceIntent = new Intent(this, RealService.class);
                 ContextCompat.startForegroundService(this, serviceIntent);
@@ -94,10 +96,10 @@ public class MainActivity extends AppCompatActivity implements PermissionLaunche
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        if (serviceIntent!=null) {
+       /* if (serviceIntent!=null) {
             stopService(serviceIntent);
             serviceIntent = null;
-        }
+        }*/
     }
     @Override
     public void permissionRegisterLauncher() {
@@ -114,6 +116,7 @@ public class MainActivity extends AppCompatActivity implements PermissionLaunche
                             serviceIntent = RealService.serviceIntent;//getInstance().getApplication();
                             Toast.makeText(getApplicationContext(), "Already", Toast.LENGTH_LONG).show();
                         }
+                        //startService(new Intent(MainActivity.this, LocationService.class));
                     }
                 }
                 else {

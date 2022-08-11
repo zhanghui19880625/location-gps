@@ -4,141 +4,131 @@ import android.Manifest;
 import android.app.Service;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.os.Bundle;
 import android.os.IBinder;
 import android.os.Looper;
 import android.util.Log;
 import android.widget.ArrayAdapter;
+import android.widget.Toast;
+import android.location.Location;
 
+import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
-
-import com.android.volley.Request;
-import com.android.volley.RequestQueue;
-import com.android.volley.Response;
-import com.android.volley.VolleyError;
-import com.android.volley.toolbox.StringRequest;
-import com.android.volley.toolbox.Volley;
-import com.google.android.gms.location.LocationCallback;
+import com.google.android.gms.common.ConnectionResult;
+import com.google.android.gms.common.api.GoogleApiClient;
+import com.google.android.gms.location.LocationListener;
 import com.google.android.gms.location.LocationRequest;
-import com.google.android.gms.location.LocationResult;
 import com.google.android.gms.location.LocationServices;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.UUID;
 
-public class LocationService extends Service {
-    public static String dburl = "http://sasasak1.cafe24.com/realtimelocation/addlocation.php",uniqueId;
-   private ArrayAdapter arrayAdapter;
-   private ArrayList update = new ArrayList<String>();
-   private void showLog(String message) {
-           Log.e(TAG, "" + message);
-      }
-    private static final String TAG = "RealtimeActivity";
-    private Intent serviceIntent;
+public class LocationService extends Service implements LocationListener,
+        GoogleApiClient.ConnectionCallbacks,
+        GoogleApiClient.OnConnectionFailedListener {
 
 
-
-
-
-
-
-
-    private LocationCallback mLocationCallback = new LocationCallback() {
-
-        @Override
-        public void onLocationResult(LocationResult locationResult) {
-            uniqueId = UUID.randomUUID().toString();
-
-            super.onLocationResult(locationResult);
-            if (locationResult != null && locationResult.getLastLocation() != null) {
-                double Latitude = locationResult.getLastLocation().getLatitude();
-                double Longitude = locationResult.getLastLocation().getLongitude();
-                Log.v("LOCATION_UPDATE", Latitude + ", " + Longitude + "," + "test");
-
-                    // Check internet permission and
-                    // Send Location to Database
-                   if (ContextCompat.checkSelfPermission(getApplicationContext(), Manifest.permission.INTERNET) == PackageManager.PERMISSION_GRANTED) {
-                saveLocation(uniqueId, Double.toString(Latitude), Double.toString(Longitude));
-                   }
-            }
-        }
-    };
+    Intent intent;
+    LocationRequest mLocationRequest;
+    GoogleApiClient mGoogleApiClient;
+    Location mLastLocation;
+    String lat, lon;
+    public static String str_receiver = "servicetutorial.service.receiver";
 
     @Nullable
     @Override
     public IBinder onBind(Intent intent) {
-        throw new UnsupportedOperationException("Not yet implemented");
+        return null;
     }
 
-    private void startLocationService() {
+    @Override
+    public void onCreate() {
+        Log.d("Service started Getting", "started!!!!!!!!!!");
+
+        super.onCreate();
+        buildGoogleApiClient();
+        intent = new Intent(str_receiver);
+
+    }
+    @Override
+    public void onDestroy() {
+        Log.d("changed", "destroy...................>");
+    }
+    synchronized void buildGoogleApiClient() {
+        mGoogleApiClient = new GoogleApiClient.Builder(this)
+                .addConnectionCallbacks(this)
+                .addOnConnectionFailedListener(this)
+                .addApi(LocationServices.API)
+                .build();
+        mGoogleApiClient.connect();
+    }
 
 
-        LocationRequest locationRequest = LocationRequest.create();
-        locationRequest.setInterval(80000);
-        locationRequest.setFastestInterval(50000);
-        locationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
+    @Override
+    public void onConnected(@Nullable Bundle bundle) {
+        Log.d("Connected:Getting ", "LOcation!!!!!!!!!!");
+        mLocationRequest = new LocationRequest();
+        mLocationRequest.setInterval(1000);
+        mLocationRequest.setFastestInterval(300);
+        mLocationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
 
-        LocationServices.getFusedLocationProviderClient(this).requestLocationUpdates(locationRequest, mLocationCallback, Looper.getMainLooper());
+        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            return;
+        }
+        LocationServices.FusedLocationApi.requestLocationUpdates(mGoogleApiClient, mLocationRequest, (com.google.android.gms.location.LocationListener) this);
+
+        mLastLocation = LocationServices.FusedLocationApi.getLastLocation(
+                mGoogleApiClient);
+        if (mLastLocation != null) {
+            lat = String.valueOf(mLastLocation.getLatitude());
+            lon = String.valueOf(mLastLocation.getLongitude());
+
+            intent.putExtra("latutide", mLastLocation.getLatitude() + "");
+            intent.putExtra("longitude", mLastLocation.getLongitude() + "");
+            sendBroadcast(intent);
+
+            Log.d("Latitue!!!!", lat);
+            Log.d("Longitude!!!!", lon);
+
+        } else {
+            Log.d("Failed", "Connection");
+            //Toast.makeText(this,"Failed",Toast.LENGTH_LONG).show();
+        }
+    }
 
 
+    @Override
+    public int onStartCommand(Intent intent, int flags, int startId) {
+        Log.d("LocationService", "ok");
+        return super.onStartCommand(intent, flags, startId);
+    }
+
+/*@Override
+public void onConnected(@Nullable Bundle bundle) {
+
+}*/
+
+    @Override
+    public void onConnectionSuspended(int i) {
 
     }
 
-    private void stopLocationService() {
-        LocationServices.getFusedLocationProviderClient(this).removeLocationUpdates(mLocationCallback);
-        stopForeground(true);
-        stopSelf();
-
+    @Override
+    public void onLocationChanged(Location location) {
+        mLastLocation = location;
+        lat = String.valueOf(location.getLatitude());
+        lon = String.valueOf(location.getLongitude());
+        String msg = "Updated Location: " +
+                Double.toString(location.getLatitude()) + "," +
+                Double.toString(location.getLongitude());
+        Toast.makeText(this, msg, Toast.LENGTH_SHORT).show();
+        Log.d("changed", "after 30");
 
     }
 
+    @Override
+    public void onConnectionFailed(@NonNull ConnectionResult connectionResult) {
 
-
-
-
-
-    public void saveLocation(String uniqueId, String latitude, String longitude){
-        RequestQueue requestQueue = Volley.newRequestQueue(this);
-        StringRequest stringRequest = new StringRequest(Request.Method.POST, dburl, new Response.Listener<String>() {
-            @Override
-            public void onResponse(String response) {
-                // Post response from server in JSON
-//                try {
-//                    JSONObject jObj = new JSONObject(response);
-//                    boolean error = jObj.getBoolean("error");
-//                    if(error) {
-//                        update.add(Calendar.getInstance().getTime() + " - Location Updated");
-//                        arrayAdapter.notifyDataSetChanged();
-//                    }else{
-//                        update.add(Calendar.getInstance().getTime() + " - Update Failed");
-//                        arrayAdapter.notifyDataSetChanged();
-//                    }
-//                } catch (JSONException e) {
-//                    e.printStackTrace();
-//                }
-            }
-        }, new Response.ErrorListener() {
-            @Override
-            public void onErrorResponse(VolleyError error) {
-                showLog("Volley error: "+error.toString());
-            }
-        }){
-            @Override
-            protected Map<String,String> getParams(){
-                Map<String,String> params = new HashMap<String, String>();
-                // Adding parameters to post request
-                params.put("uniqueId",uniqueId);
-                params.put("latitude",latitude);
-                params.put("longitude",longitude);
-                return params;
-            }
-        };
-
-        // Adding request to request queue
-        requestQueue.add(stringRequest);
     }
 }
 
